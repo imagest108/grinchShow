@@ -1,0 +1,2130 @@
+<html>
+  <head>
+
+    <meta name="viewport" content="target-densitydpi=device-dpi, initial-scale=1.0, user-scalable=no" />  
+    <style>
+        html {
+          overflow-y: hidden !important 
+        }
+        body {
+            margin : 0px;
+            background-color: transparent;
+            background-repeat:no-repeat;
+            font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+            font-weight: 300; 
+            text-shadow: 0px 0px 1px #888;   
+
+            font-size: 0.8em; 
+            line-height: 1.2em; 
+        }
+
+        #viewport {
+        position:relative;
+        }
+        #viewport canvas {
+        position:absolute;
+        }
+        canvas {
+        /**
+        * Set transparent to let any other canvases render through
+        */
+        background-color: transparent;
+        }
+
+        #container{
+        margin: 0px;
+        max-width : 100%; 
+        height: 100%; 
+        padding: 0.8em;
+        padding-top: 2em;
+        /*background-color: #E6E6E6;*/
+
+        background-image: url("http://itp.nyu.edu/~jj1357/animation/mobilebg.png");
+        background-size:100% 100%;
+        background-repeat:no-repeat;
+        }
+
+        #log {
+
+        height : 30%;
+        background-color: #FFFFFF;
+        -moz-border-radius: 10px;
+        -webkit-border-radius: 10px;
+        -moz-box-shadow: inset 0 0 30px #444; 
+        -webkit-box-shadow:inset 0 0 30px #444; 
+        box-shadow:inset 0 0 30px #444; 
+                   
+        }
+               
+        #attack { 
+                
+        background-color: #00ab26; 
+        position: relative;
+                   
+        } 
+        #hide { 
+        background-color: #d60004; 
+        position: relative;         
+        } 
+
+        button { 
+
+        /*basic styles*/ 
+        margin-top: 5%;
+        margin-left: 90px;   
+        width: 100px; 
+        height: 100px; 
+        color: #fff; 
+        text-align: center; 
+        font-size: 1.0em; 
+        line-height: 1.2em; 
+        /*gradient styles*/ /*border styles*/ 
+        -moz-border-radius: 50px; 
+        -webkit-border-radius: 50px; 
+        border-radius: 50px; 
+        float: left;
+        /*shadow styles*/ 
+        -moz-box-shadow: 2px 3px 5px #bfbfbf; 
+        -webkit-box-shadow: 2px 3px 5px #bfbfbf; 
+        box-shadow: 2px 3px 5px #bfbfbf; 
+        }  
+
+        button:hover { 
+        -moz-box-shadow:inset 0 0 30px #444; 
+        -webkit-box-shadow:inset 0 0 30px #444; 
+        box-shadow:inset 0 0 30px #444; 
+        } 
+
+        #profile {
+        margin-left : 20px;   
+        position: absolute;
+        }
+
+        #profile img {
+        height: 30%;      
+        }        
+
+        #textbox {
+        width: 60%;
+        height: 30%;
+        max-width: 340px;
+        margin-top: 20px;
+        margin-right: 20px;
+        position: relative;
+        float: right;
+        vertical-align: middle;
+        }
+    
+         #urlplate-s1{
+            background-color: transparent;
+            top: -25px;
+            left: 938px;
+            position: absolute;
+
+        }
+        #urlplate-s2{
+            background-color: transparent;
+            top: -25px;
+            left: 1534px;
+            position: absolute;
+
+        }
+
+        #urlplate-s3{
+            background-color: transparent;
+            top: -25px;
+            left: 1352px;
+            position: absolute;
+
+        }
+
+        #grinch-s1{
+            background-color: transparent;
+            top: 600px;
+            left: 2300px;
+            position: absolute;
+            
+            -webkit-animation: slideone 30s infinite;
+        }
+
+        #grinch-s2{
+            background-color: transparent;
+            top: 600px;
+            left: -1540px;
+            position: absolute;       
+            -webkit-animation: slidetwo 30s infinite;
+        }
+
+        #grinch-s3{
+            background-color: transparent;
+            top: 600px;
+            left: -5380px;
+            position: absolute;
+           
+            -webkit-animation: slidethree 30s infinite;
+        }
+
+        @-webkit-keyframes slideone {
+
+            50% { left: 7680px; }
+
+            100% { left: 2300px; }
+        }
+        @-webkit-keyframes slidetwo {
+
+            50% { left: 3840px;}
+
+            100% { left: -1540px; }
+
+        }
+        @-webkit-keyframes slidethree {
+
+            50% { left: 0px;}
+
+            100% { left: -5380px; }
+
+        }
+
+        #hats {
+
+            position: absolute;
+
+        }
+
+
+      </style>
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+
+      <script>
+
+            var bottomctx;
+            var middlectx;
+            var topctx;
+            var characterctx;
+            var ballctx;
+            var grinchctx;
+            var id;
+            var WIDTH;
+            var HEIGHT;
+            var dx, dy, dy2;
+            var screenNum; 
+            
+            var icewalls = [];   
+
+            var snowball = "http://itp.nyu.edu/~jyp323/ju/wp-content/uploads/2013/11/snowball.png";
+            var smashed = "http://itp.nyu.edu/~jyp323/ju/wp-content/uploads/2013/11/smashedsnowball.png";
+            var hideOn = false;
+            var grinchIsOn = false;
+            var grinchAttack = false;
+            var bgisrendered;
+
+            //standard ==> 11520, 1080
+            var absoluteGrinchLoc = {
+                    section : 2,
+                    x : 4600,
+                    y : 580,
+                    w : 2000,
+                    h : 575
+            };
+
+            
+            var grinchScreen1 = {
+                    section: 1,
+                    x : 0,
+                    y : 0,
+                    w : 0,
+                    h : 0 
+            };
+            var grinchScreen2 = {
+                    section: 2,
+                    x : 0,
+                    y : 0,
+                    w : 0,
+                    h : 0
+            };
+            var grinchScreen3 = {
+                    section: 3,
+                    x : 0,
+                    y : 0,
+                    w : 0,
+                    h : 0
+            };
+
+            var playerList = [];
+
+            var characterDic1 = [
+                {
+                "index":1,
+                "section":1,
+                "id":"null",
+                "x":999,
+                "y":346,
+                "w":60,
+                "h":120,
+                "bx":1044,
+                "by":391,
+                "r":10,
+                "tx":3125,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":416,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-4-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-4-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-4-3.png"
+                },
+                {
+                "index":2,
+                "section":1,
+                "id":"null",
+                "x":1126,
+                "y":291,
+                "w":60,
+                "h":120,
+                "bx":1171,
+                "by":336,
+                "r":10,
+                "tx":2801,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":361,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-9-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-9-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-9-3.png"
+                },
+                {
+                "index":3,
+                "section":1,
+                "id":"null",
+                "x":1190,
+                "y":280,
+                "w":60,
+                "h":120,
+                "bx":1235,
+                "by":325,
+                "r":10,
+                "tx":3138,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":350,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-0-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-0-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-0-3.png"
+                },
+                {
+                "index":4,
+                "section":1,
+                "id":"null",
+                "x":1259,
+                "y":266,
+                "w":60,
+                "h":120,
+                "bx":1304,
+                "by":311,
+                "r":10,
+                "tx":2945,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":336,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-1-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-1-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-1-3.png"
+                },
+                {
+                "index":5,
+                "section":1,
+                "id":"null",
+                "x":1326,
+                "y":249,
+                "w":60,
+                "h":120,
+                "bx":1371,
+                "by":294,
+                "r":10,
+                "tx":2817,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":319,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-22-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-22-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-22-3.png"
+                },
+                {
+                "index":6,
+                "section":1,
+                "id":"null",
+                "x":1394,
+                "y":227,
+                "w":60,
+                "h":120,
+                "bx":1439,
+                "by":272,
+                "r":10,
+                "tx":2833,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":297,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-15-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-15-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-15-3.png"
+                },
+                {
+                "index":7,
+                "section":1,
+                "id":"null",
+                "x":1462,
+                "y":203,
+                "w":60,
+                "h":120,
+                "bx":1507,
+                "by":248,
+                "r":10,
+                "tx":3160,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":273,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-6-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-6-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-6-3.png"
+                },
+                {
+                "index":8,
+                "section":1,
+                "id":"null",
+                "x":1533,
+                "y":216,
+                "w":60,
+                "h":120,
+                "bx":1578,
+                "by":261,
+                "r":10,
+                "tx":2909,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":286,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-12-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-12-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-12-3.png"
+                },
+                {
+                "index":9,
+                "section":1,
+                "id":"null",
+                "x":1599,
+                "y":206,
+                "w":60,
+                "h":120,
+                "bx":1644,
+                "by":251,
+                "r":10,
+                "tx":2766,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":276,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-13-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-13-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-13-3.png"
+                },
+                {
+                "index":10,
+                "section":1,
+                "id":"null",
+                "x":1662,
+                "y":199,
+                "w":60,
+                "h":120,
+                "bx":1707,
+                "by":244,
+                "r":10,
+                "tx":2792,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":269,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-14-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-14-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-14-3.png"
+                },
+                {
+                "index":11,
+                "section":1,
+                "id":"null",
+                "x":1733,
+                "y":194,
+                "w":60,
+                "h":120,
+                "bx":1778,
+                "by":239,
+                "r":10,
+                "tx":2864,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":264,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-5-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-5-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-5-3.png"
+                },
+                {
+                "index":12,
+                "section":1,
+                "id":"null",
+                "x":1805,
+                "y":181,
+                "w":60,
+                "h":120,
+                "bx":1850,
+                "by":226,
+                "r":10,
+                "tx":2795,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":251,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-23-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-23-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-23-3.png"
+                },
+                {
+                "index":13,
+                "section":1,
+                "id":"null",
+                "x":1876,
+                "y":181,
+                "w":60,
+                "h":120,
+                "bx":1921,
+                "by":226,
+                "r":10,
+                "tx":3109,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":251,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-18-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-18-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-18-3.png"
+                },
+                {
+                "index":14,
+                "section":1,
+                "id":"null",
+                "x":1950,
+                "y":178,
+                "w":60,
+                "h":120,
+                "bx":1995,
+                "by":223,
+                "r":10,
+                "tx":2699,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":248,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-19-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-19-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-19-3.png"
+                },
+                {
+                "index":15,
+                "section":1,
+                "id":"null",
+                "x":2020,
+                "y":178,
+                "w":60,
+                "h":120,
+                "bx":2065,
+                "by":223,
+                "r":10,
+                "tx":2852,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":248,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-20-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-20-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-20-3.png"
+                },
+                {
+                "index":16,
+                "section":1,
+                "id":"null",
+                "x":2088,
+                "y":190,
+                "w":60,
+                "h":120,
+                "bx":2133,
+                "by":235,
+                "r":10,
+                "tx":3158,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":260,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-21-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-21-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-21-3.png"
+                },
+                {
+                "index":17,
+                "section":1,
+                "id":"null",
+                "x":1440,
+                "y":531,
+                "w":60,
+                "h":120,
+                "bx":1485,
+                "by":576,
+                "r":10,
+                "tx":3115,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":601,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-10-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-10-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-10-3.png"
+                },
+                {
+                "index":18,
+                "section":1,
+                "id":"null",
+                "x":1503,
+                "y":498,
+                "w":60,
+                "h":120,
+                "bx":1548,
+                "by":543,
+                "r":10,
+                "tx":3179,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":568,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who1/who1-11-2.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who1/who1-11-1.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who1/who1-11-3.png"
+                }
+            ];
+
+            var characterDic2 = [
+                {
+                "index":1,
+                "section":2,
+                "id":"null",
+                "x":43,
+                "y":209,
+                "w":60,
+                "h":120,
+                "bx":63,
+                "by":264,
+                "r":10,
+                "tx":1232,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":279,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who2/who2-9-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who2/who2-9-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who2/who2-9-3.png"
+                },
+                {
+                "index":2,
+                "section":2,
+                "id":"null",
+                "x":119,
+                "y":201,
+                "w":60,
+                "h":120,
+                "bx":139,
+                "by":256,
+                "r":10,
+                "tx":863,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":271,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who2/who2-10-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who2/who2-10-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who2/who2-10-3.png"
+                },
+                {
+                "index":3,
+                "section":2,
+                "id":"null",
+                "x":198,
+                "y":196,
+                "w":60,
+                "h":120,
+                "bx":218,
+                "by":251,
+                "r":10,
+                "tx":877,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":266,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who22/who22-24-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who22/who22-24-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who22/who22-24-3.png"
+                },
+                {
+                "index":4,
+                "section":2,
+                "id":"null",
+                "x":271,
+                "y":190,
+                "w":60,
+                "h":120,
+                "bx":291,
+                "by":245,
+                "r":10,
+                "tx":1019,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":260,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who22/who22-7-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who22/who22-7-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who22/who22-7-3.png"
+                },
+                {
+                "index":5,
+                "section":2,
+                "id":"null",
+                "x":345,
+                "y":180,
+                "w":60,
+                "h":120,
+                "bx":365,
+                "by":235,
+                "r":10,
+                "tx":902,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":250,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who2/who2-11-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who2/who2-11-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who2/who2-11-3.png"
+                },
+                {
+                "index":6,
+                "section":2,
+                "id":"null",
+                "x":417,
+                "y":173,
+                "w":60,
+                "h":120,
+                "bx":437,
+                "by":228,
+                "r":10,
+                "tx":1011,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":243,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who22/who22-8-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/whosample/1-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/whosample/1-3.png"
+                },
+                {
+                "index":7,
+                "section":2,
+                "id":"null",
+                "x":487,
+                "y":167,
+                "w":60,
+                "h":120,
+                "bx":507,
+                "by":222,
+                "r":10,
+                "tx":920,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":237,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who22/who22-9-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who22/who22-9-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who22/who22-9-3.png"
+                },
+                {
+                "index":8,
+                "section":2,
+                "id":"null",
+                "x":567,
+                "y":162,
+                "w":60,
+                "h":120,
+                "bx":587,
+                "by":217,
+                "r":10,
+                "tx":1115,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":232,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who2/who2-12-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who2/who2-12-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who2/who2-12-3.png"
+                },
+                {
+                "index":9,
+                "section":2,
+                "id":"null",
+                "x":638,
+                "y":155,
+                "w":60,
+                "h":120,
+                "bx":658,
+                "by":210,
+                "r":10,
+                "tx":1051,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":225,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who22/who22-10-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who22/who22-10-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who22/who22-10-3.png"
+                },
+                {
+                "index":10,
+                "section":2,
+                "id":"null",
+                "x":720,
+                "y":160,
+                "w":60,
+                "h":120,
+                "bx":740,
+                "by":215,
+                "r":10,
+                "tx":1125,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":230,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who2/who2-13-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who2/who2-13-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who2/who2-13-3.png"
+                },
+                {
+                "index":11,
+                "section":2,
+                "id":"null",
+                "x":795,
+                "y":155,
+                "w":60,
+                "h":120,
+                "bx":815,
+                "by":210,
+                "r":10,
+                "tx":1281,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":225,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who2/who2-14-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who2/who2-14-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who2/who2-14-3.png"
+                },
+                {
+                "index":12,
+                "section":2,
+                "id":"null",
+                "x":874,
+                "y":148,
+                "w":60,
+                "h":120,
+                "bx":894,
+                "by":203,
+                "r":10,
+                "tx":889,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":218,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who22/who22-23-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who22/who22-23-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who22/who22-23-3.png"
+                },
+                {
+                "index":13,
+                "section":2,
+                "id":"null",
+                "x":953,
+                "y":131,
+                "w":60,
+                "h":120,
+                "bx":973,
+                "by":186,
+                "r":10,
+                "tx":1113,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":201,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who22/who22-12-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who22/who22-12-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who22/who22-12-3.png"
+                },
+                {
+                "index":14,
+                "section":2,
+                "id":"null",
+                "x":1035,
+                "y":131,
+                "w":60,
+                "h":120,
+                "bx":1055,
+                "by":186,
+                "r":10,
+                "tx":939,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":201,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who22/who22-21-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who22/who22-21-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who22/who22-21-3.png"
+                },
+                {
+                "index":15,
+                "section":2,
+                "id":"null",
+                "x":1118,
+                "y":152,
+                "w":60,
+                "h":120,
+                "bx":1138,
+                "by":207,
+                "r":10,
+                "tx":933,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":222,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who2/who2-15-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who2/who2-15-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who2/who2-15-3.png"
+                },
+                {
+                "index":16,
+                "section":2,
+                "id":"null",
+                "x":145,
+                "y":440,
+                "w":60,
+                "h":120,
+                "bx":165,
+                "by":495,
+                "r":10,
+                "tx":1242,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":510,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who2/who2-16-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who2/who2-16-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who2/who2-16-3.png"
+                },
+                {
+                "index":17,
+                "section":2,
+                "id":"null",
+                "x":220,
+                "y":439,
+                "w":60,
+                "h":120,
+                "bx":240,
+                "by":494,
+                "r":10,
+                "tx":1053,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":509,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who22/who22-14-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who22/who22-14-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who22/who22-14-3.png"
+                }
+            ];
+              
+
+            var characterDic3 = [
+                {
+                "index":1,
+                "section":3,
+                "id":"null",
+                "x":1675,
+                "y":573,
+                "w":60,
+                "h":120,
+                "bx":1672,
+                "by":613,
+                "r":10,
+                "tx":97,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":643,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-1-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-1-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-1-3.png"
+                },
+                {
+                "index":2,
+                "section":3,
+                "id":"null",
+                "x":1593,
+                "y":496,
+                "w":60,
+                "h":120,
+                "bx":1590,
+                "by":536,
+                "r":10,
+                "tx":50,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":566,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-2-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-2-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-2-3.png"
+                },
+                {
+                "index":3,
+                "section":3,
+                "id":"null",
+                "x":1507,
+                "y":415,
+                "w":60,
+                "h":120,
+                "bx":1504,
+                "by":455,
+                "r":10,
+                "tx":106,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":485,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-4-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-4-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-4-3.png"
+                },
+                {
+                "index":4,
+                "section":3,
+                "id":"null",
+                "x":1417,
+                "y":349,
+                "w":60,
+                "h":120,
+                "bx":1414,
+                "by":389,
+                "r":10,
+                "tx":62,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":419,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-6-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-6-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-6-3.png"
+                },
+                {
+                "index":5,
+                "section":3,
+                "id":"null",
+                "x":1331,
+                "y":313,
+                "w":60,
+                "h":120,
+                "bx":1328,
+                "by":353,
+                "r":10,
+                "tx":85,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":383,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-7-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-7-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-7-3.png"
+                },
+                {
+                "index":6,
+                "section":3,
+                "id":"null",
+                "x":1247,
+                "y":286,
+                "w":60,
+                "h":120,
+                "bx":1244,
+                "by":326,
+                "r":10,
+                "tx":130,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":356,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-8-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-8-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-8-3.png"
+                },
+                {
+                "index":7,
+                "section":3,
+                "id":"null",
+                "x":1163,
+                "y":276,
+                "w":60,
+                "h":120,
+                "bx":1160,
+                "by":316,
+                "r":10,
+                "tx":140,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":346,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-9-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-9-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-9-3.png"
+                },
+                {
+                "index":8,
+                "section":3,
+                "id":"null",
+                "x":1075,
+                "y":245,
+                "w":60,
+                "h":120,
+                "bx":1072,
+                "by":285,
+                "r":10,
+                "tx":105,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":315,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-11-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-11-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-11-3.png"
+                },
+                {
+                "index":9,
+                "section":3,
+                "id":"null",
+                "x":985,
+                "y":225,
+                "w":60,
+                "h":120,
+                "bx":982,
+                "by":265,
+                "r":10,
+                "tx":146,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":295,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-12-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-12-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-12-3.png"
+                },
+                {
+                "index":10,
+                "section":3,
+                "id":"null",
+                "x":925,
+                "y":210,
+                "w":60,
+                "h":120,
+                "bx":922,
+                "by":250,
+                "r":10,
+                "tx":102,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":280,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-13-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-13-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-13-3.png"
+                },
+                {
+                "index":11,
+                "section":3,
+                "id":"null",
+                "x":833,
+                "y":175,
+                "w":60,
+                "h":120,
+                "bx":830,
+                "by":215,
+                "r":10,
+                "tx":65,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":245,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-16-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-16-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-16-3.png"
+                },
+                {
+                "index":12,
+                "section":3,
+                "id":"null",
+                "x":747,
+                "y":192,
+                "w":60,
+                "h":120,
+                "bx":744,
+                "by":232,
+                "r":10,
+                "tx":104,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":262,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-5-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-5-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-5-3.png"
+                },
+                {
+                "index":13,
+                "section":3,
+                "id":"null",
+                "x":665,
+                "y":193,
+                "w":60,
+                "h":120,
+                "bx":662,
+                "by":233,
+                "r":10,
+                "tx":121,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":263,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-14-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-14-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-14-3.png"
+                },
+                {
+                "index":14,
+                "section":3,
+                "id":"null",
+                "x":805,
+                "y":435,
+                "w":60,
+                "h":120,
+                "bx":802,
+                "by":475,
+                "r":10,
+                "tx":147,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":505,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-10-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-10-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-10-3.png"
+                },
+                {
+                "index":15,
+                "section":3,
+                "id":"null",
+                "x":717,
+                "y":408,
+                "w":60,
+                "h":120,
+                "bx":714,
+                "by":448,
+                "r":10,
+                "tx":80,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":478,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-17-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-17-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-17-3.png"
+                },
+                {
+                "index":16,
+                "section":3,
+                "id":"null",
+                "x":637,
+                "y":399,
+                "w":60,
+                "h":120,
+                "bx":634,
+                "by":439,
+                "r":10,
+                "tx":89,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":469,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-3-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-3-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-3-3.png"
+                },
+                {
+                "index":17,
+                "section":3,
+                "id":"null",
+                "x":250,
+                "y":200,
+                "w":60,
+                "h":120,
+                "bx":247,
+                "by":240,
+                "r":10,
+                "tx":71,
+                "ty":700,
+                "attack":false,
+                "throwing":false,
+                "hide":false,
+                "killed":false,
+                "yPosTarget":270,
+                "standingurl":"http://itp.nyu.edu/~jj1357/who3/who3-0-1.png",
+                "throwingurl":"http://itp.nyu.edu/~jj1357/who3/who3-0-2.png",
+                "hidingurl":"http://itp.nyu.edu/~jj1357/who3/who3-0-3.png"
+                }
+            ];
+
+
+            //Ju's
+            //var socket = io.connect('http://ec2-54-200-42-18.us-west-2.compute.amazonaws.com:8080/');
+            //Jess's
+            var socket = io.connect('http://ec2-54-200-79-16.us-west-2.compute.amazonaws.com:8080/');
+            
+            var path = window.location.pathname;
+            var role = null;
+
+            socket.on('connect', function(){
+
+            id = socket.socket.sessionid;   
+
+            if(path == '/display1') {
+                role = 'display';
+                screenNum = 1;
+            } else if(path == '/display2') {
+                role = 'display';
+                screenNum = 2;
+            } else if(path == '/display3') {
+                role = 'display';
+                screenNum = 3;
+            } else if(path == '/1') {
+                role = 'user_group1';
+                guiInit(role);
+            } else if(path == '/2') {
+                role = 'user_group2';
+                guiInit(role);
+            } else if(path == '/3') {
+                role = 'user_group3';
+                guiInit(role);
+            } else if(path == '/grinch') {
+                console.log("I'm the grinch");
+                role = 'grinch';
+                guiInit(role);
+            }       
+                    
+            socket.emit('register',role);
+            
+            });
+            
+            socket.on('render', function (data){
+                // draw user on the screen! 
+                if(data.role === "display"){                                    
+                    init(); 
+                                
+                }else if( data.role === "user_group1" || data.role === "user_group2" || data.role === "user_group3"){
+
+                    getPlayerData(screenNum, data);
+
+                } else if(data.role === "grinch"){
+                   // calibrateGrinchLoc();
+                    var grinchDiv = document.createElement("div");
+                    grinchDiv.setAttribute('id', 'grinchDiv');
+                    document.body.appendChild(grinchDiv);  
+
+                    if(screenNum === 1){
+                        $("#grinchDiv").append('<div id = "grinch-s1"><img src ="http://itp.nyu.edu/~jj1357/grinchimages/grinch.png" alt="" width="1900px" height="600px"/></div>'); 
+
+                    } else if(screenNum === 2){
+                        $("#grinchDiv").append('<div id = "grinch-s2"><img src ="http://itp.nyu.edu/~jj1357/grinchimages/grinch.png" alt="" width="1900px" height="600px"/></div>'); 
+                       
+                    } else if(screenNum === 3){
+                        $("#grinchDiv").append('<div id = "grinch-s3"><img src ="http://itp.nyu.edu/~jj1357/grinchimages/grinch.png" alt="" width="1900px" height="600px"/></div>'); 
+                    }
+
+                    
+                  
+                        
+                }
+            });
+            
+
+            socket.on('renderThrow', function (data){
+
+
+                for(var i =0; i<playerList.length; i++){
+                    if(playerList[i].id == data.id && playerList[i].section == data.section){
+                        playerList[i].attack = true;
+
+                    }
+                }
+                 
+            });
+
+            socket.on('renderHide', function (data){
+
+
+                for(var i =0; i<playerList.length; i++){
+                    if(playerList[i].id == data.id && playerList[i].section == data.section){
+                        playerList[i].hide = true;
+                     
+                    }
+                }
+                 
+            });
+
+
+            socket.on('hideOn', function (){
+                hideOn = true;
+                console.log(hideOn);
+          
+            });
+
+            socket.on('hideOff', function (){
+
+                hideOn = false;
+                console.log(hideOn);
+          
+            });
+            /*
+            socket.on('setGrinchLoc', function (data){
+                    //console.log(data);
+                    if(data.section === 1) grinchScreen1 = data;
+                    else if(data.section === 2) grinchScreen2 = data;
+                    else if(data.section === 3) grinchScreen3 = data;
+                    grinchIsOn = true;
+
+            });
+            */
+            socket.on('kill', function (section){
+
+                grinchAttack = true;
+                killUsers();
+                   
+            });
+
+            socket.on('killUsers', function (section){
+                console.log("grinch Pressed: " + section);
+                //console.log(hideOn);
+                gameOver();
+                
+                
+            });
+
+            socket.on('renderPlayerImage', function (data){
+
+                var userimage = document.getElementById("playerimg");
+                userimage.src = data.url;
+                var profile = document.getElementById("profile");
+                profile.appendChild(userimage);
+                        
+
+            });
+
+            function finish(){
+                if(screenNum === 1){
+                    window.location.replace("http://ec2-54-200-42-18.us-west-2.compute.amazonaws.com:8080/ending1");
+                }else if(screenNum === 2){
+                    window.location.replace("http://ec2-54-200-42-18.us-west-2.compute.amazonaws.com:8080/ending2");
+                }else if(screenNum === 3){
+                    window.location.replace("http://ec2-54-200-42-18.us-west-2.compute.amazonaws.com:8080/ending3");
+                }
+            };
+
+            socket.on('clock', function (){
+                setTimeout('finish()', 75000);
+            });
+
+            
+            function calibrateGrinchLoc(){
+                    
+     
+            };
+            /*
+            var updateGrinch = function(){
+
+                    grinchScreen1.x += 5;
+                    grinchScreen2.x += 5;
+                    grinchScreen3.x += 5;
+                    
+            };
+
+            var drawGrinch = function(data){
+                var img = new Image();
+                img.src = "http://itp.nyu.edu/~jj1357/grinchimages/grinch.png";
+                grinchctx.drawImage(img, data.x, data.y, data.w, data.h); 
+
+            };
+            */
+
+            function guiInit(role){
+                var container=document.createElement("div");
+                    container.setAttribute('id', 'container');
+                    container.setAttribute("width", "320");
+                    container.setAttribute("height", "480");
+                    document.body.appendChild(container); 
+
+
+                    if(role === "grinch"){
+
+                        var log = document.createElement("div");
+                        log.setAttribute('id','log');
+                        var profile = document.createElement("div");
+                        profile.setAttribute('id', 'profile');
+                        var userimage = document.createElement("img");
+                        userimage.src = "http://www.vectorsland.com/imgd/l56756-the-grinch-logo-65964.png"
+                        var textbox = document.createElement("div");
+                        textbox.setAttribute('id','textbox');
+                        textbox.innerHTML = "You're the Grinch! Press the button and attack one section of whoville! ";
+                        
+                        profile.appendChild(userimage);
+                        log.appendChild(profile);
+                        log.appendChild(textbox);
+                        container.appendChild(log)
+
+                        var attack1 = document.createElement("button");
+                        attack1.setAttribute('id','attack');
+                        attack1.setAttribute('onclick', 'attackScreen(1);');
+                        attack1.innerHTML = "Attack land 1!";
+                        container.appendChild(attack1);
+
+                        var attack2 = document.createElement("button");
+                        attack2.setAttribute('id','attack');
+                        attack2.setAttribute('onclick', 'attackScreen(2);');
+                        attack2.innerHTML = "Attack land 2!";
+                        container.appendChild(attack2);
+
+                        var attack3 = document.createElement("button");
+                        attack3.setAttribute('id','attack');
+                        attack3.setAttribute('onclick', 'attackScreen(3);');
+                        attack3.innerHTML = "Attack land 3!";
+                        container.appendChild(attack3);
+
+                    } else if(role === "user_group1"){
+
+                        var log = document.createElement("div");
+                        log.setAttribute('id','log');
+                        var profile = document.createElement("div");
+                        profile.setAttribute('id', 'profile');
+                        var userimage = document.createElement("img");
+                        userimage.setAttribute('id', 'playerimg');
+                        var textbox = document.createElement("div");
+                        textbox.setAttribute('id','textbox');
+                        textbox.innerHTML = "Attack Grinch with snowballs! It's better to hide when Grinch is near you. If you don't hide and then loose a hat, you'll be over! ";
+                        
+                        profile.appendChild(userimage);
+                        log.appendChild(profile);
+                        log.appendChild(textbox);
+                        container.appendChild(log)
+
+                        var attack = document.createElement("button");
+                        attack.setAttribute('id','attack');
+                        attack.setAttribute('onclick', 'attackPressed(1);');
+                        attack.innerHTML = "Attack!";
+                        container.appendChild(attack);
+
+                        var hide = document.createElement("button");
+                        hide.setAttribute('id','hide');
+                        hide.setAttribute('onclick', 'hidePressed(1);');
+                        hide.innerHTML = "Hide!";
+                        container.appendChild(hide);
+                    
+                    } else if(role === "user_group2"){
+
+                        var log = document.createElement("div");
+                        log.setAttribute('id','log');
+                        var profile = document.createElement("div");
+                        profile.setAttribute('id', 'profile');
+                        var userimage = document.createElement("img");
+                        userimage.setAttribute('id', 'playerimg');
+                        var textbox = document.createElement("div");
+                        textbox.setAttribute('id','textbox');
+                        textbox.innerHTML = "Attack Grinch with snowballs! Hide when Grinch is near you. Otherwise, Grinch will suck your hat out and you lose!";
+                        
+                        profile.appendChild(userimage);
+                        log.appendChild(profile);
+                        log.appendChild(textbox);
+                        container.appendChild(log)
+
+                        var attack = document.createElement("button");
+                        attack.setAttribute('id','attack');
+                        attack.setAttribute('onclick', 'attackPressed(2);');
+                        attack.innerHTML = "Attack!";
+                        container.appendChild(attack);
+
+                        var hide = document.createElement("button");
+                        hide.setAttribute('id','hide');
+                        hide.setAttribute('onclick', 'hidePressed(2);');
+                        hide.innerHTML = "Hide!";
+                        container.appendChild(hide);
+                    
+                    }  else if(role === "user_group3"){
+
+                        var log = document.createElement("div");
+                        log.setAttribute('id','log');
+                        var profile = document.createElement("div");
+                        profile.setAttribute('id', 'profile');
+                        var userimage = document.createElement("img");
+                        userimage.setAttribute('id', 'playerimg');
+                        var textbox = document.createElement("div");
+                        textbox.setAttribute('id','textbox');
+                        textbox.innerHTML = "Attack Grinch with snowballs! It's better to hide when Grinch is near you. If you don't hide and then loose a hat, you'll be over! ";
+                        
+                        profile.appendChild(userimage);
+                        log.appendChild(profile);
+                        log.appendChild(textbox);
+                        container.appendChild(log)
+
+                        var attack = document.createElement("button");
+                        attack.setAttribute('id','attack');
+                        attack.setAttribute('onclick', 'attackPressed(3);');
+                        attack.innerHTML = "Attack!";
+                        container.appendChild(attack);
+
+                        var hide = document.createElement("button");
+                        hide.setAttribute('id','hide');
+                        hide.setAttribute('onclick', 'hidePressed(3);');
+                        hide.innerHTML = "Hide!";
+                        container.appendChild(hide);
+                    }               
+                    
+            };
+
+
+            function alertSound(){
+                    var alertbgm = new Audio('http://itp.nyu.edu/~jj1357/bsmusic2/alert.wav');
+                    alertbgm.play();
+                    console.log("alert Sound");
+            }
+            
+            function attackScreen(_section){
+
+                //socket.emit('alert', {section: _section});
+               socket.emit('kill', {section: _section});
+               socket.emit('killUsers', {section: _section});
+
+            };
+
+            /*socket.on('alert',function(data){
+                alertSound();
+                setTimeout(function(data){
+                    socket.emit('kill', data);
+                    socket.emit('killUsers', data);
+                },3000);
+                    
+
+            });
+            */
+
+           /* function setKill(){
+                socket.emit('kill', data);
+                socket.emit('killUsers', data);
+                console.log("set kill");
+           
+            
+            }
+*/
+
+            function attackPressed(_section){
+                socket.emit('attack', {id: id, section: _section});
+            };
+
+            function hidePressed(_section){
+                socket.emit('hide', {id: id, section: _section});
+            };
+
+
+                    
+            function attack(){
+
+                var easing = 0.2;
+                for(var i = 0; i < playerList.length; i++){
+
+                    if(playerList[i].attack === true){
+                        dx = playerList[i].tx - playerList[i].bx;
+                        if(Math.abs(dx)>1){
+                            playerList[i].bx += dx * easing; 
+                        } 
+                                
+                        dy = playerList[i].ty - playerList[i].by;
+                        if(Math.abs(dy)>1){
+                            playerList[i].by += dy * easing; 
+
+                            playerList[i].r++;
+
+                        } 
+                        if(Math.abs(dx)<1 || Math.abs(dy)<1){
+                            if(playerList[i].section == 1){
+                                playerList[i].bx = playerList[i].x+45;
+                                playerList[i].by = playerList[i].y+45;
+                                playerList[i].r = 10;
+                                playerList[i].attack = false;
+                            } else if(playerList[i].section == 3){
+                                playerList[i].bx = playerList[i].x-3;
+                                playerList[i].by = playerList[i].y+40;
+                                playerList[i].r = 10;
+                                playerList[i].attack = false;
+                            }else{
+                                playerList[i].bx = playerList[i].x+19;
+                                playerList[i].by = playerList[i].y+55;
+                                playerList[i].r = 10;
+                                playerList[i].attack = false;
+                            }
+                        }   
+
+                    }                                        
+               
+                }
+
+            }
+
+
+            function hide(){
+                var easing = 0.08;
+                for(var i = 0; i< playerList.length; i++){
+                    //var originalY = playerList[i].y;
+                    if(playerList[i].hide === true){
+                        
+                        dy2 = playerList[i].yPosTarget - playerList[i].y;
+                        if(Math.abs(dy2)>1){
+                            playerList[i].y += dy2 * easing;
+                            playerList[i].by += dy2 * easing; 
+
+                        } else{
+                            if(playerList[i].section == 3){
+                                playerList[i].y = playerList[i].y-70;
+                                playerList[i].by = playerList[i].y+40;
+                                playerList[i].hide = false;
+                                socket.emit('hideTrigger', {id: playerList[i].id, section: playerList[i].section});
+                            }else{
+                                playerList[i].y = playerList[i].y-70;
+                                playerList[i].by = playerList[i].y+55;
+                                playerList[i].hide = false;
+                                socket.emit('hideTrigger', {id: playerList[i].id, section: playerList[i].section});
+                            }
+
+                            
+                        }
+                    }
+                }
+
+            };
+            /*
+            function backUsers(){
+                for(var i =0; i<playerList.length; i++){
+                    if(playerList[i].hide === true){
+
+                        if(playerList[i].section == 3){
+                                playerList[i].y = playerList[i].y-70;
+                                playerList[i].by = playerList[i].y+40;
+                                playerList[i].hide = false;
+                                socket.emit('hideTrigger', {id: playerList[i].id, section: playerList[i].section});
+                        }else{
+                                playerList[i].y = playerList[i].y-70;
+                                playerList[i].by = playerList[i].y+55;
+                                playerList[i].hide = false;
+                                socket.emit('hideTrigger', {id: playerList[i].id, section: playerList[i].section});
+                        }
+
+                    }
+                }
+            };
+            */
+
+                    
+            function init(){
+
+                var canvasobj;
+                var canvasgroup = [];
+
+                for(var i = 0; i < 5 ; i++){
+                    canvasobj = document.createElement("canvas");
+                    canvasobj.setAttribute('id', 'canvas'+i);
+                    canvasobj.width = 3840;
+                    canvasobj.height = 1080;
+                    document.getElementById('viewport').appendChild(canvasobj);
+                    canvasgroup.push(canvasobj);
+                }      
+                characterctx = document.getElementById('canvas0').getContext('2d');
+                middlectx = document.getElementById('canvas1').getContext('2d');
+                topctx = document.getElementById('canvas2').getContext('2d');
+                ballctx = document.getElementById('canvas3').getContext('2d');
+                //grinchctx = document.getElementById('canvas4').getContext('2d');
+
+                WIDTH = 3840;
+                HEIGHT = 1080;
+                
+                renderBG_bottom();
+                createBG_middle();
+                
+                var intervalId = setInterval(draw,20);///check
+
+                var urlplate=document.createElement("div");
+                urlplate.setAttribute('id', 'urlplate');
+                document.body.appendChild(urlplate); 
+
+                if(screenNum === 1){
+                    $("#urlplate").append('<div id = "urlplate-s1"><img src ="http://itp.nyu.edu/~jj1357/grinch_bg/screen1url.png" alt="" width="455px" height="250px"/></div>'); 
+                    /* backgroundMusic = new Audio('http://itp.nyu.edu/~jj1357/bsmusic2/jinglebells.mp3');
+                    backgroundMusic.play();
+
+                    setInterval('alertSound()',10000);
+                    */
+                    
+                }else if(screenNum === 2){
+                    $("#urlplate").append('<div id = "urlplate-s2"><img src ="http://itp.nyu.edu/~jj1357/grinch_bg/screen2url.png" alt="" width="455px" height="250px"/></div>'); 
+                    var backgroundMusic = new Audio('http://itp.nyu.edu/~jj1357/bsmusic2/jinglebells.mp3');
+                    backgroundMusic.play();
+
+                    setInterval('alertSound()',10000);
+                    
+                    
+                }else if(screenNum === 3){
+                    $("#urlplate").append('<div id = "urlplate-s3"><img src ="http://itp.nyu.edu/~jj1357/grinch_bg/screen3url.png" alt="" width="455px" height="250px"/></div>'); 
+                    
+                }
+                    
+                                                         
+            };
+
+            function renderBG_bottom(){
+
+                var bgurl = "url('http://itp.nyu.edu/~jj1357/grinch_bg/bottom-screen"+screenNum+".jpg')";         
+                document.body.style.backgroundImage = bgurl;
+                
+            };
+
+            function createBG_middle(){
+                            
+                for(var i = 1; i < 9; i++){
+
+                    var middleobj = new Image();
+                    var tempUrl = "http://itp.nyu.edu/~jj1357/grinch_bg_middleobj/middleobj"+i;
+                    
+                    if(i < 4) middleobj.src = tempUrl + "-screen1.png";
+                  else if(i > 5) middleobj.src = tempUrl + "-screen3.png";
+                  else middleobj.src = tempUrl + "-screen2.png";
+   
+                  middleobj.width = 3840;
+                  middleobj.height = 1080;
+                  icewalls.push(middleobj);
+                
+                }     
+            
+            };
+
+            function drawBG_middle(){
+
+                middlectx.clearRect(0,0,WIDTH, HEIGHT);
+
+                if(screenNum === 1){
+                    middlectx.drawImage(icewalls[0],496,220);
+                    middlectx.drawImage(icewalls[1],1444,243);
+                    middlectx.drawImage(icewalls[2],2180,336);
+                    
+                }else if(screenNum === 2){
+                    middlectx.drawImage(icewalls[3],0,173);
+                    middlectx.drawImage(icewalls[4],0,76);
+                    
+                }else if(screenNum === 3){
+                    middlectx.drawImage(icewalls[7],532,164);
+                    middlectx.drawImage(icewalls[6],0,309);
+                    middlectx.drawImage(icewalls[5],0,240);
+                    
+                    
+                }
+            
+            };
+
+            function drawBG_top(data){
+
+                topctx.clearRect(0,0,WIDTH, HEIGHT);
+
+
+                var topLayer = new Image();
+                topLayer.src = "http://itp.nyu.edu/~jj1357/grinch_bg/top-screen"+data+".png";
+                topLayer.width = 3840;
+                topLayer.height = 1080;
+                topctx.drawImage(topLayer,0,0);
+            
+            };
+
+            var getPlayerData = function(screenNum, data){
+
+                var tempUrl = null;
+                var tempRole = null;
+
+                if(screenNum == 1){
+                    characterDic1[data.index-1].id = data.id;
+                    playerList.push(characterDic1[data.index-1]);
+                    tempUrl = characterDic1[data.index-1].standingurl;
+                    tempRole = data.role;
+
+                }else if(screenNum == 2){
+                    characterDic2[data.index-1].id = data.id;
+                    playerList.push(characterDic2[data.index-1]);
+                    tempUrl = characterDic2[data.index-1].standingurl;
+                    tempRole = data.role;
+
+
+                }else if (screenNum == 3){
+                    characterDic3[data.index-1].id = data.id;
+                    playerList.push(characterDic3[data.index-1]);
+                    tempUrl = characterDic3[data.index-1].standingurl;
+                    tempRole = data.role;
+                }   
+
+                var tempData = { id : data.id, role : tempRole, url : tempUrl};
+                socket.emit("renderPlayerImage", tempData);        
+                            
+            };
+
+            var drawCharacter = function(data){
+
+
+                for(var i = 0; i < playerList.length; i++){
+                    if(playerList[i].section === data){
+
+                        characterctx.clearRect(playerList[i].x, playerList[i].y-50, playerList[i].w, playerList[i].h+50);
+
+                        if(playerList[i].attack === true && playerList[i].by > playerList[i].y+80 && playerList[i].by < 620 ){
+                            playerList[i].throwing = true;
+                        } else {
+                            playerList[i].throwing = false;
+                        }
+
+                        var img = new Image();
+                        if(playerList[i].throwing === true){
+                            img.src = playerList[i].throwingurl;
+                        }else if(playerList[i].killed === true){
+                            img.src = playerList[i].hidingurl;
+                        } else {
+                            img.src = playerList[i].standingurl;
+                        }
+                        characterctx.drawImage(img, playerList[i].x, playerList[i].y, playerList[i].w, playerList[i].h);        
+                    }
+
+                }     
+                                    
+            };
+
+            var drawBall = function(){
+
+                ballctx.clearRect(0,0,WIDTH,HEIGHT);
+
+                var snowImage = new Image();
+                //snowImage.src = snowball;
+                for(var i =0; i<playerList.length; i++){
+                    if(playerList[i].killed === false){
+                        if(playerList[i].by>670){
+                            snowImage.src = smashed;
+                            ballctx.drawImage(snowImage, playerList[i].bx, playerList[i].by, 200, 200);
+                        } else{
+                            snowImage.src = snowball;
+                            ballctx.drawImage(snowImage, playerList[i].bx, playerList[i].by, playerList[i].r*2, playerList[i].r*2);
+                        } 
+                    }
+                        
+                }
+            
+            };
+
+            var draw = function(){
+
+                drawCharacter(screenNum);
+                
+                drawBG_middle(screenNum);
+                drawBG_top(screenNum);
+
+                //grinchctx.clearRect(0,0,WIDTH,HEIGHT);
+                /*
+                if(grinchIsOn === true){
+                    updateGrinch();
+                    //drawGrinch(grinchScreen1);
+                    //drawGrinch(grinchScreen2);
+                    //drawGrinch(grinchScreen3);
+                }
+                */
+                attack();
+                hide();
+                drawBall();
+                bgisrendered = true;
+            
+            };
+
+            function gameOver(){
+
+                if(hideOn === false){
+
+                    var textbox = document.getElementById("textbox");
+                    textbox.innerHTML = "Game Over! Grinch has sucked your hat out!";
+                    var img = document.getElementById("playerimg");
+                    var attackGui = document.getElementById("attack");
+                    var hideGui = document.getElementById("hide");
+                    document.getElementById("container").removeChild(attackGui); 
+                    document.getElementById("container").removeChild(hideGui);
+                    document.getElementById("profile").removeChild(img);
+
+                }
+
+            };
+
+            function killUsers(){
+
+                var flyinghats = document.createElement("div");
+                flyinghats.setAttribute('id','hats');
+                document.body.appendChild(flyinghats);
+                $('#hats').append('<img src = "http://itp.nyu.edu/~jj1357/animation/hats.png" width = "3840" />');
+                setTimeout(function(){$('#hats').remove();},1000);
+                for(var i =0; i<playerList.length; i++){
+                    if(playerList[i].hide === false && grinchAttack == true){
+                        playerList[i].killed = true;
+                    }
+                }
+                grinchAttack = false;
+                //backUsers();
+
+            };
+
+                      
+
+                        
+                </script>
+        </head>
+        <body>
+
+            <div id="viewport"></div>
+
+        </body>
+</html>
