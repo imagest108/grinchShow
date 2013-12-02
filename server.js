@@ -17,12 +17,12 @@ function requestHandler (req, res){
                 });
 }
 
-var displaygroup = [];
+var displaygroup = new Array();
 var usergroup1 = [];
 var usergroup2 = [];
 var usergroup3 = [];
 var grinch = null;
-
+var ctr = 0;
 
 var io = require('socket.io').listen(httpServer);
 
@@ -32,33 +32,53 @@ io.sockets.on('connection', function (socket){
 
 	console.log("We have a new client: " + socket.id);
 	socket.on('register', function(data){
-		//console.log(data);
-		if( data === "display"){
+
+
+		if( data === "display1"){
+			ctr++;
+			console.log(ctr);
 			 
-			if(displaygroup.length < 3){				
+			//if(displaygroup.length < 3){				
 				var tempData = { 
 					id: socket.id, 
-					index: displaygroup.length+1,
+					index: 1,
 					role: data 
 				};
 				
-				displaygroup.push(tempData);
-				io.sockets.socket(displaygroup[displaygroup.length-1].id).emit('render', tempData);
-				if(displaygroup.length === 3){
-					io.sockets.socket(displaygroup[0].id).emit('clock');
-					io.sockets.socket(displaygroup[1].id).emit('clock');
-					io.sockets.socket(displaygroup[2].id).emit('clock');
-				}
-		
-			}else{
-				//make socket disconnect!
-				console.log("you shouldn't be here!");
-				console.log("displaysockets are "+ displaygroup.length);
-			}	
+				displaygroup[0] = tempData;
+				io.sockets.socket(displaygroup[0].id).emit('render', tempData);
 
-		} else if(data === "user_group1"){
+
+		} else if( data === "display2"){
+			ctr++;
+			console.log(ctr);
+			var tempData = { 
+					id: socket.id, 
+					index: 2,
+					role: data 
+			};
+				
+			displaygroup[1] = tempData;
+			io.sockets.socket(displaygroup[1].id).emit('render', tempData);
+
+
+		} else if( data === "display3"){
+			ctr++;
+			console.log(ctr);
+			var tempData = { 
+					id: socket.id, 
+					index: 3,
+					role: data 
+			};
+				
+			displaygroup[2] = tempData;
+			io.sockets.socket(displaygroup[2].id).emit('render', tempData);
+
+		}
+
+		else if(data === "user_group1"){
 			
-			if(usergroup1.length < 50){				
+			if(usergroup1.length < 45){				
 				tempData = { 
 					id: socket.id, 
 					index: usergroup1.length+1,
@@ -75,7 +95,7 @@ io.sockets.on('connection', function (socket){
 
 		} else if(data === "user_group2"){
 			
-			if(usergroup2.length < 50){								
+			if(usergroup2.length < 55){								
 				tempData = { 
 					id: socket.id, 
 					index: usergroup2.length+1,
@@ -91,7 +111,7 @@ io.sockets.on('connection', function (socket){
 			}
 		} else if(data === "user_group3"){
 			
-			if(usergroup3.length < 50){								
+			if(usergroup3.length < 30){								
 				tempData = { 
 					id: socket.id, 
 					index: usergroup3.length+1,
@@ -122,9 +142,16 @@ io.sockets.on('connection', function (socket){
         
             }
 		
-        else{
+        	else{
                 //make socket disconnect!
             }
+
+        }
+
+        if(ctr>=3){
+        	io.sockets.socket(displaygroup[0].id).emit('clock');
+        	io.sockets.socket(displaygroup[1].id).emit('clock');
+        	io.sockets.socket(displaygroup[2].id).emit('clock');
         }
 		
 
@@ -132,28 +159,17 @@ io.sockets.on('connection', function (socket){
 
 	socket.on('renderPlayerImage', function (data){
         io.sockets.socket(data.id).emit('renderPlayerImage', data);
+        if(data.section === 1){
+        	io.sockets.socket(displaygroup[0].id).emit('displayPlayer',data);
+       		
+        }else if(data.section === 2){
+        	io.sockets.socket(displaygroup[1].id).emit('displayPlayer',data);
+       		
+        }else if(data.section === 3){	
+	        io.sockets.socket(displaygroup[2].id).emit('displayPlayer',data);
+	    }    
     });
 
-	/*
-	socket.on('calibrateLoc', function (data){
-
-                  
-        for(var i = 0; i < displaygroup.length ; i++){
-                          
-            var calibratedX = data.x - (3840 * i);
-            var calibLoc = {
-                section : i+1,
-                x : calibratedX,
-                y : data.y,
-                w : data.w,
-                h : data.h
-            };        
-
-            io.sockets.socket(displaygroup[i].id).emit('setGrinchLoc', calibLoc);
-        }        
-
-    });
-	*/
 	
 	socket.on('disconnect', function() {
 		console.log("Client has disconnected");
@@ -240,11 +256,7 @@ io.sockets.on('connection', function (socket){
 		
 	});
 
-	socket.on('alert', function(data){
-		io.sockets.socket(displaygroup[1].id).emit('alert', data.section);
-	});
 	socket.on('kill', function (data){
-
 		if(data.section == 1){
 			io.sockets.socket(displaygroup[0].id).emit('kill', data.section);
 		} else if(data.section == 2){
