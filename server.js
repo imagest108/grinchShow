@@ -22,7 +22,18 @@ var usergroup1 = [];
 var usergroup2 = [];
 var usergroup3 = [];
 var grinch = null;
-var ctr = 0;
+var totalscore = 0;
+var totalhats = 0;
+var totalnum = 0;
+var num1 = 0;
+var num2 = 0;
+var num3 = 0; 
+var score1 = 0;
+var score2 = 0; 
+var score3 = 0;
+var hats1 = 0;
+var hats2 = 0;
+var hats3 =0; 
 
 var io = require('socket.io').listen(httpServer);
 
@@ -35,10 +46,7 @@ io.sockets.on('connection', function (socket){
 
 
 		if( data === "display1"){
-			ctr++;
-			console.log(ctr);
 			 
-			//if(displaygroup.length < 3){				
 				var tempData = { 
 					id: socket.id, 
 					index: 1,
@@ -50,8 +58,7 @@ io.sockets.on('connection', function (socket){
 
 
 		} else if( data === "display2"){
-			ctr++;
-			console.log(ctr);
+	
 			var tempData = { 
 					id: socket.id, 
 					index: 2,
@@ -63,8 +70,7 @@ io.sockets.on('connection', function (socket){
 
 
 		} else if( data === "display3"){
-			ctr++;
-			console.log(ctr);
+	
 			var tempData = { 
 					id: socket.id, 
 					index: 3,
@@ -85,12 +91,14 @@ io.sockets.on('connection', function (socket){
 					role: data 
 				};
 				usergroup1.push(tempData);
-				console.log(usergroup1[usergroup1.length -1 ]);
+				//console.log("usergroup1 length: "+ usergroup1.length);
 
 				io.sockets.socket(displaygroup[0].id).emit('render', tempData);
 				
 			}else{
-				//make socket disconnect!
+				//Can't play game! 
+				io.sockets.socket(socket.id).emit('error',tempData);
+		
 			}
 
 		} else if(data === "user_group2"){
@@ -102,12 +110,14 @@ io.sockets.on('connection', function (socket){
 					role: data 
 				};
 				usergroup2.push(tempData);
-				console.log(usergroup2[usergroup2.length -1 ]);
+				//console.log("usergroup2 length: "+ usergroup2.length);
 
 				io.sockets.socket(displaygroup[1].id).emit('render', tempData);
 				
 			}else{
-				//make socket disconnect!
+				//Can't play game! 
+				io.sockets.socket(socket.id).emit('error',tempData);
+	
 			}
 		} else if(data === "user_group3"){
 			
@@ -118,16 +128,23 @@ io.sockets.on('connection', function (socket){
 					role: data 
 				};
 				usergroup3.push(tempData);
-				console.log(usergroup3[usergroup3.length -1 ]);
+				//console.log("usergroup3 length: "+ usergroup3.length);
 
 				io.sockets.socket(displaygroup[2].id).emit('render', tempData);
 				
 			}else{
-				//make socket disconnect!
+				//Can't play game! 
+				io.sockets.socket(socket.id).emit('error',tempData);
+	
 			}
 		} else if(data === "grinch"){
                         
-            console.log("grinch found in server side");            
+            //console.log("grinch found in server side");   
+            io.sockets.socket(displaygroup[0].id).emit('clock');
+        	io.sockets.socket(displaygroup[1].id).emit('clock');
+        	io.sockets.socket(displaygroup[2].id).emit('clock');         
+            
+        	
             if(grinch == null){                                                                
                 tempData = { 
                     id: socket.id, 
@@ -143,17 +160,12 @@ io.sockets.on('connection', function (socket){
             }
 		
         	else{
-                //make socket disconnect!
+				//Can't play game! 
+				io.sockets.socket(socket.id).emit('error',tempData);
+
             }
 
-        }
-
-        if(ctr>=3){
-        	io.sockets.socket(displaygroup[0].id).emit('clock');
-        	io.sockets.socket(displaygroup[1].id).emit('clock');
-        	io.sockets.socket(displaygroup[2].id).emit('clock');
-        }
-		
+        }		
 
 	});
 
@@ -170,99 +182,130 @@ io.sockets.on('connection', function (socket){
 	    }    
     });
 
-	
-	socket.on('disconnect', function() {
-		console.log("Client has disconnected");
-	});
-
 	socket.on('attack', function (data){
 		io.sockets.socket(displaygroup[data.section-1].id).emit('renderThrow', data);
 	});
 
 	socket.on('hide', function (data){
-
-		if(data.section == 1){
-			for(var i=0; i<usergroup1.length; i++){
-				if(usergroup1[i].id == data.id){
-					io.sockets.socket(usergroup1[i].id).emit('hideOn');
-				}
-			}
-
-
-		} else if(data.section == 2){
-			for(var i=0; i<usergroup2.length; i++){
-				if(usergroup2[i].id == data.id){
-					io.sockets.socket(usergroup2[i].id).emit('hideOn');
-				}
-			}
-		} else if(data.section == 3){
-			for(var i=0; i<usergroup3.length; i++){
-				if(usergroup3[i].id == data.id){
-					io.sockets.socket(usergroup3[i].id).emit('hideOn');
-				}
-			}
-		}
 		io.sockets.socket(displaygroup[data.section-1].id).emit('renderHide', data);
 
 	});
 
-	socket.on('hideTrigger', function (data){
-		if(data.section == 1){
-			for(var i =0; i<usergroup1.length; i++){
-				if(usergroup1[i].id == data.id){
-					io.sockets.socket(usergroup1[i].id).emit('hideOff');
-				}
-			}
-		} else if(data.section == 2){
-			for(var i =0; i<usergroup2.length; i++){
-				if(usergroup2[i].id == data.id){
-					io.sockets.socket(usergroup2[i].id).emit('hideOff');
-				}
-			}
-		} else if(data.section == 3){
-			for(var i =0; i<usergroup3.length; i++){
-				if(usergroup3[i].id == data.id){
-					io.sockets.socket(usergroup3[i].id).emit('hideOff');
-				}
-			}
-		}
-	});
+	socket.on('killGui', function (data){
 
-	socket.on('killUsers', function (data){
-
-		if(data.section == 1){
-
-			for(var i = 0; i <usergroup1.length; i++){
-
-            	io.sockets.socket(usergroup1[i].id).emit('killUsers', data.section);
-
-        	}  
+        io.sockets.socket(data).emit('pause');
         	      
-    	} else if(data.section == 2){
-
-			for(var i = 0; i <usergroup2.length; i++){
-
-            	io.sockets.socket(usergroup2[i].id).emit('killUsers', data.section);
-        	}  
-        	      
-    	} else if(data.section == 3){
-
-			for(var i = 0; i <usergroup3.length; i++){
-
-            	io.sockets.socket(usergroup3[i].id).emit('killUsers', data.section);
-        	}        
-        	
-    	}
 		
 	});
 
-	socket.on('kill', function (data){
-		if(data.section == 1){
-			io.sockets.socket(displaygroup[0].id).emit('kill', data.section);
-		} else if(data.section == 2){
-			io.sockets.socket(displaygroup[1].id).emit('kill', data.section);
-		} else if(data.section ==3){
-			io.sockets.socket(displaygroup[2].id).emit('kill', data.section);
+	socket.on('displayStatus', function (data) {
+		if(data.section === 1){
+			score1 = data.score;
+			hats1 = data.hats;
+		} else if(data.section === 2){
+			score2 = data.score;
+			hats2 = data.hats;
+		} else if(data.section === 3){
+			score3 = data.score;
+			hats3 = data.hats;
 		}
+
+		totalscore = score1 + score2 + score3;
+		totalhats = hats1 + hats2 + hats3;
+		//console.log("totalscore: " + totalscore + ", totalhats: "+ totalhats);
+		io.sockets.socket(displaygroup[0].id).emit('statustotal', {score: totalscore, hats: totalhats});
+		io.sockets.socket(displaygroup[1].id).emit('statustotal', {score: totalscore, hats: totalhats});
+		io.sockets.socket(displaygroup[2].id).emit('statustotal', {score: totalscore, hats: totalhats});
+
+
+
+	});
+
+	socket.on('closeBrowser', function() {
+		for(var i=0; i<usergroup1.length; i++){
+			io.sockets.socket(usergroup1[i].id).emit('closing');
+
+		}
+
+		for(var j=0; j<usergroup2.length; j++){
+			io.sockets.socket(usergroup2[j].id).emit('closing');
+
+		}
+		for(var k=0; k<usergroup3.length; k++){
+			io.sockets.socket(usergroup3[k].id).emit('closing');
+
+		}
+	});
+
+	socket.on('countBalls', function (data) {
+
+		io.sockets.socket(data.id).emit('guiBalls', {balls: data.balls});
+
+	});
+
+	socket.on('disconnect', function() {
+		/*
+		var index = -1;
+		var section1 = false;
+		var section2 = false;
+		var section3 = false;
+            for(var i=0; i<usergroup1.length; i++) {
+             	if(usergroup1[i].id == socket.id){
+             		index = i;
+             		section1 = true;
+             		section2 = false;
+             		section3 = false;
+             	}
+            }
+            for(var i=0; i<usergroup2.length; i++) {
+             	if(usergroup2[i].id == socket.id){
+             		index = i;
+             		section2 = true;
+             		section1 = false;
+             		section3 = false;
+             	}
+            }
+            for(var i=0; i<usergroup3.length; i++) {
+             	if(usergroup3[i].id == socket.id){
+             		index = i;
+             		section3 = true;
+             		section1 = false;
+             		section2 = false;
+             	}
+            }
+            if(index != -1 && section1 === true) {
+             	usergroup1.splice(index,1);
+            } else if (index != -1 && section2 === true) {
+             	usergroup2.splice(index,1);
+            } else if(index != -1 && section3 === true) {
+             	usergroup3.splice(index,1);
+            }
+		//console.log("Client has disconnected");
+		*/
+	});
+
+
+
+	socket.on('kill', function (data){
+		if(data.section === 1){
+			io.sockets.socket(displaygroup[0].id).emit('kill', {section: 1});
+		} else if(data.section === 2){
+			io.sockets.socket(displaygroup[1].id).emit('kill', {section: 2});
+		} else if(data.section ===3){
+			io.sockets.socket(displaygroup[2].id).emit('kill', {section: 3});
+		}
+	});
+
+	socket.on('playerListLen', function (data){
+		if(data.section === 1){
+			num1 = data.len;
+		} else if(data.section === 2){
+			num2 = data.len;
+		} else if(data.section === 3){
+			num3 = data.len;
+		}
+
+		totalnum = num1 + num2 + num3;
+		console.log("playerList length: " + totalnum);
 	});
 });
